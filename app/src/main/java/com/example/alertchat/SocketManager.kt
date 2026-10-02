@@ -5,56 +5,61 @@ import io.socket.client.Socket
 import org.json.JSONObject
 
 object SocketManager {
-    private const val SERVER_URL = "https://alert-chat-backend.onrender.com"
+    private const val SERVER_URL = "https://alert-chat-backend.onrender.com/"
     var socket: Socket? = null
 
-    fun connect() {
+    var currentRoomId: String = "1234"
+    var currentUserName: String = "User"
+    var connectedPeerName: String? = null
+
+    fun init() {
         if (socket == null) {
             try {
                 socket = IO.socket(SERVER_URL)
                 socket?.connect()
-                // Default test room join kar rahe hain
-                socket?.emit("join_room", "global_test_room")
             } catch (e: Exception) {
                 e.printStackTrace()
             }
         }
     }
 
-    fun sendAlert(sender: String, msg: String) {
-        val json = JSONObject()
-        json.put("roomId", "global_test_room")
-        json.put("senderName", sender)
-        json.put("message", msg)
-        json.put("timestamp", System.currentTimeMillis())
-        socket?.emit("send_alert", json)
+    fun joinRoom(roomId: String, userName: String) {
+        currentRoomId = roomId
+        currentUserName = userName
+        val data = JSONObject().apply {
+            put("roomId", roomId)
+            put("userName", userName)
+        }
+        socket?.emit("join_room", data)
     }
 
-    fun sendMessage(sender: String, msg: String) {
-        val json = JSONObject()
-        json.put("roomId", "global_test_room")
-        json.put("senderId", sender)
-        json.put("text", msg)
-        json.put("timestamp", System.currentTimeMillis())
-        socket?.emit("send_message", json)
+    fun sendAlert(msg: String) {
+        val data = JSONObject().apply {
+            put("roomId", currentRoomId)
+            put("senderName", currentUserName)
+            put("message", msg)
+        }
+        socket?.emit("send_alert", data)
+    }
+
+    fun sendMessage(msg: String) {
+        val data = JSONObject().apply {
+            put("roomId", currentRoomId)
+            put("senderName", currentUserName)
+            put("text", msg)
+        }
+        socket?.emit("send_message", data)
     }
 
     fun sendCantAttend() {
-        val json = JSONObject()
-        json.put("roomId", "global_test_room")
-        socket?.emit("cant_attend", json)
+        val data = JSONObject().apply {
+            put("roomId", currentRoomId)
+            put("senderName", currentUserName)
+            put("text", "I'm busy right now, cannot attend!")
+        }
+        socket?.emit("send_message", data)
     }
 
-    fun requestSave() {
-        val json = JSONObject()
-        json.put("roomId", "global_test_room")
-        socket?.emit("request_save", json)
-    }
-
-    fun sendSaveDecision(agreed: Boolean) {
-        val json = JSONObject()
-        json.put("roomId", "global_test_room")
-        json.put("agreed", agreed)
-        socket?.emit("save_consent_response", json)
-    }
+    fun requestSave() {}
+    fun sendSaveDecision(decision: Boolean) {}
 }
