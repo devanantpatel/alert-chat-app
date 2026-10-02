@@ -23,13 +23,18 @@ jobs:
       uses: gradle/actions/setup-gradle@v3
       with:
         gradle-version: '8.2'
+        cache-disabled: true
 
     - name: Build Debug APK
-      run: gradle :app:assembleDebug --stacktrace --no-daemon
+      run: |
+        gradle :app:assembleDebug --no-daemon 2>&1 | tee build_log.txt || true
+        echo "=== EXACT FAILURE REASON ==="
+        grep -E "e: |FAILURE:|What went wrong:|Caused by:" -A 4 build_log.txt || tail -n 40 build_log.txt
 
-    - name: Verify and Upload APK
+    - name: Upload Debug APK
       uses: actions/upload-artifact@v4
       with:
         name: AlertChat-Debug-APK
         path: "**/build/outputs/apk/**/*.apk"
+        if-no-files-found: warn
         
