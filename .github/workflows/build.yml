@@ -27,12 +27,18 @@ jobs:
     - name: Grant Execute Permission to Gradlew
       run: chmod +x gradlew
 
+    - name: List Projects and Tasks
+      run: ./gradlew projects tasks --no-daemon
+
     - name: Build Debug APK
-      run: ./gradlew assembleDebug --stacktrace --no-daemon
+      run: ./gradlew :app:assembleDebug --stacktrace --no-daemon
+
+    - name: Verify APK Generated
+      run: find . -name "*.apk" -type f
 
     - name: Upload Debug APK
       uses: actions/upload-artifact@v4
       with:
         name: AlertChat-Debug-APK
-        path: "**/build/outputs/apk/**/*.apk"
+        path: app/build/outputs/apk/debug/app-debug.apk
         
